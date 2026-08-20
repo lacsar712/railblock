@@ -47,6 +47,9 @@ func TestRejectOnConflict(t *testing.T) {
 	if res.IsAllowed() {
 		t.Fatal("expected reject on conflict")
 	}
+	if !res.Blocks[0].Conflict {
+		t.Fatalf("expected Conflict flag from IsConflict, got %+v", res.Blocks[0])
+	}
 }
 
 func TestRejectEmptyRoute(t *testing.T) {

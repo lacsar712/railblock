@@ -62,11 +62,15 @@ func ParseBody(body []byte, kind ContentKind) ([]byte, error) {
 // DecodePayload parses one or more frames from raw bytes.
 func DecodePayload(raw []byte) (*codec.Frame, error) {
 	if len(raw) == codec.FrameSize {
-		return codec.Decode(raw)
+		f, err := codec.Decode(raw)
+		if err != nil {
+			return nil, fmt.Errorf("decode payload: %w", err)
+		}
+		return f, nil
 	}
 	frames, err := codec.DecodeMany(raw)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decode payload: %w", err)
 	}
 	if len(frames) == 0 {
 		return nil, codec.ErrShortFrame

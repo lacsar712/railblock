@@ -99,3 +99,51 @@ func TestHexRoundTrip(t *testing.T) {
 		t.Fatalf("block=%d", got.BlockID)
 	}
 }
+
+func TestAppendCRCMatchesVerify(t *testing.T) {
+	prefix := []byte{
+		0x52, 0x42, 0x4C, 0x4B, // magic
+		0x01, 0x00, // ver, flags
+		0x00, 0x0C, // block 12 BE
+		0x01,                   // occupied
+		0x00, 0x00, 0x00, 0x2A, // seq 42
+	}
+	buf := make([]byte, len(prefix)+4)
+	copy(buf, prefix)
+	codec.AppendCRC(buf, prefix)
+	if !codec.VerifyCRC(buf, len(prefix)) {
+		t.Fatal("AppendCRC output must VerifyCRC with matching payload length and endian")
+	}
+}
+
+func TestDecodeManyRejectsTrailingPartial(t *testing.T) {
+	f, _ := codec.NewFrame(1, 1, 1, 0)
+	raw, _ := codec.Encode(f)
+	raw = append(raw, 0x00, 0x01, 0x02) // trailing partial frame
+	_, err := codec.DecodeMany(raw)
+	if !errors.Is(err, codec.ErrShortFrame) {
+		t.Fatalf("trailing partial: got %v want ErrShortFrame", err)
+	}
+}
+
+func TestBlockIDBigEndianRoundTrip(t *testing.T) {
+	const want uint16 = 0x1234
+	f, err := codec.NewFrame(want, 1, 9, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := codec.Encode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := binary.BigEndian.Uint16(raw[6:8]); got != want {
+		t.Fatalf("wire block_id=%#04x want %#04x (big-endian)", got, want)
+	}
+	decoded, err := codec.Decode(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decoded.BlockID != want {
+		t.Fatalf("decoded block_id=%#04x want %#04x", decoded.BlockID, want)
+	}
+}

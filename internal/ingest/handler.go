@@ -2,11 +2,13 @@ package ingest
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/lacsar712/railblock/internal/bitmap"
+	"github.com/lacsar712/railblock/internal/codec"
 	"github.com/lacsar712/railblock/internal/conflict"
 )
 
@@ -96,8 +98,7 @@ func (p *Processor) HandleFrames(w http.ResponseWriter, r *http.Request) {
 }
 
 func isCRCOrMagic(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "CRC") || strings.Contains(msg, "magic")
+	return errors.Is(err, codec.ErrBadCRC) || errors.Is(err, codec.ErrBadMagic)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v interface{}) {

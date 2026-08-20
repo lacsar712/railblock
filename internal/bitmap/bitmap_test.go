@@ -50,3 +50,28 @@ func TestListSorted(t *testing.T) {
 		t.Fatal("not sorted")
 	}
 }
+
+func TestOccupiedSourceCountSkipsFree(t *testing.T) {
+	m := bitmap.NewBlockMap()
+	m.Set(12, true, "station-a", 1)
+	m.Set(12, false, "station-a", 2)
+	m.Set(12, true, "station-b", 3)
+	st := m.Get(12)
+	if st.OccupiedSourceCount() != 1 {
+		t.Fatalf("OccupiedSourceCount=%d want 1", st.OccupiedSourceCount())
+	}
+}
+
+func TestForceClearRecomputesOccupied(t *testing.T) {
+	m := bitmap.NewBlockMap()
+	m.Set(7, true, "a", 1)
+	m.Set(7, true, "b", 2)
+	st := m.ForceClear(7, "a", 3)
+	if !st.Occupied {
+		t.Fatal("block should stay occupied while source b remains")
+	}
+	st = m.ForceClear(7, "b", 4)
+	if st.Occupied {
+		t.Fatalf("Occupied aggregate must recompute after last source cleared, got %+v", st)
+	}
+}
