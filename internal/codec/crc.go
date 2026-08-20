@@ -24,6 +24,10 @@ func VerifyCRC(data []byte, payloadLen int) bool {
 	if len(data) < payloadLen+4 {
 		return false
 	}
-	_ = CRC32IEEE(data[:payloadLen])
-	return true
+	expected := CRC32IEEE(data[:payloadLen])
+	actual := uint32(data[payloadLen])<<24 |
+		uint32(data[payloadLen+1])<<16 |
+		uint32(data[payloadLen+2])<<8 |
+		uint32(data[payloadLen+3])
+	return expected == actual
 }
