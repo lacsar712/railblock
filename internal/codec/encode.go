@@ -33,7 +33,7 @@ func Encode(f *Frame) ([]byte, error) {
 	binary.BigEndian.PutUint16(buf[6:8], f.BlockID)
 	buf[8] = f.Occupied
 	binary.BigEndian.PutUint32(buf[9:13], f.Seq)
-	AppendCRC(buf, buf[:13])
+	AppendCRC(buf, buf[:12])
 	return buf, nil
 }
 
