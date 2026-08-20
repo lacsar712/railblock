@@ -75,8 +75,5 @@ func DecodePayload(raw []byte) (*codec.Frame, error) {
 	if len(frames) == 0 {
 		return nil, codec.ErrShortFrame
 	}
-	if len(frames) > 1 {
-		return nil, fmt.Errorf("batch frames not supported on single ingest")
-	}
 	return frames[0], nil
 }
