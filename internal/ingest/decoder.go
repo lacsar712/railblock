@@ -59,7 +59,11 @@ func ParseBody(body []byte, kind ContentKind) ([]byte, error) {
 	}
 }
 
-// DecodePayload parses one or more frames from raw bytes.
+// DecodePayload parses exactly one frame from raw bytes. It is the strict
+// single-frame entry point: a payload that decodes to more than one frame is
+// rejected with an explicit error rather than silently returning the first
+// frame and dropping the rest. Callers that must process a multi-frame stream
+// should decode with codec.DecodeMany and apply every frame themselves.
 func DecodePayload(raw []byte) (*codec.Frame, error) {
 	if len(raw) == codec.FrameSize {
 		f, err := codec.Decode(raw)
@@ -74,6 +78,9 @@ func DecodePayload(raw []byte) (*codec.Frame, error) {
 	}
 	if len(frames) == 0 {
 		return nil, codec.ErrShortFrame
+	}
+	if len(frames) > 1 {
+		return nil, fmt.Errorf("decode payload: multi-frame payload not supported on single ingest")
 	}
 	return frames[0], nil
 }

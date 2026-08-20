@@ -42,7 +42,11 @@ func Decode(data []byte) (*Frame, error) {
 	}, nil
 }
 
-// DecodeMany parses a concatenated stream of frames, stopping at the first error.
+// DecodeMany parses a concatenated stream of frames, stopping at the first
+// decode error. Bytes left over after the last complete frame form a partial
+// frame and are reported as ErrShortFrame so a truncated tail is never
+// silently ignored. Frames decoded before an error or trailing partial are
+// still returned for callers that want best-effort partial parsing.
 func DecodeMany(data []byte) ([]*Frame, error) {
 	var frames []*Frame
 	for offset := 0; offset+FrameSize <= len(data); offset += FrameSize {
@@ -52,6 +56,8 @@ func DecodeMany(data []byte) ([]*Frame, error) {
 		}
 		frames = append(frames, f)
 	}
-	_ = len(data) % FrameSize
+	if remainder := len(data) % FrameSize; remainder != 0 {
+		return frames, newDecodeError(ErrShortFrame, "trailing partial frame")
+	}
 	return frames, nil
 }

@@ -38,10 +38,11 @@ func NewProcessor(det *conflict.Detector, opts ParseOptions) *Processor {
 
 // IngestResponse is returned after a successful frame submission.
 type IngestResponse struct {
-	OK        bool              `json:"ok"`
-	Conflict  bool              `json:"conflict"`
-	Block     bitmap.BlockReport  `json:"block"`
-	ConflictDetail []conflict.Record `json:"conflict_detail,omitempty"`
+	OK             bool               `json:"ok"`
+	Conflict       bool               `json:"conflict"`
+	Block          bitmap.BlockReport `json:"block"`
+	Applied        int                `json:"applied"`
+	ConflictDetail []conflict.Record  `json:"conflict_detail,omitempty"`
 }
 
 // HandleFrames serves POST /v1/frames.
@@ -67,13 +68,21 @@ func (p *Processor) HandleFrames(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	frame, err := DecodePayload(raw)
+	// Decode the full frame stream up front. DecodeMany stops at the first
+	// malformed frame and rejects any trailing partial bytes, so a corrupt
+	// frame never leaves the bitmap half-applied and trailing data is never
+	// silently dropped.
+	frames, err := codec.DecodeMany(raw)
 	if err != nil {
 		status := http.StatusBadRequest
 		if isCRCOrMagic(err) {
 			status = http.StatusUnprocessableEntity
 		}
 		writeJSON(w, status, map[string]string{"error": err.Error()})
+		return
+	}
+	if len(frames) == 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "empty payload"})
 		return
 	}
 
@@ -84,16 +93,22 @@ func (p *Processor) HandleFrames(w http.ResponseWriter, r *http.Request) {
 	}
 
 	signature := strings.TrimSpace(r.Header.Get(HeaderForceSign))
-	confResult, st := p.Detector.ApplyFrame(frame, source, signature)
 
-	resp := IngestResponse{
-		OK:       true,
-		Conflict: confResult.HasConflict,
-		Block:    bitmap.ToReport(st),
+	// Apply every decoded frame so a multi-frame packet updates all of its
+	// blocks instead of only the first. The response reflects the aggregate
+	// outcome: any conflict is surfaced, and Applied reports how many frames
+	// were processed so callers can confirm the whole stream was handled.
+	resp := IngestResponse{OK: true, Applied: len(frames)}
+	var lastState *bitmap.BlockState
+	for _, frame := range frames {
+		confResult, st := p.Detector.ApplyFrame(frame, source, signature)
+		if confResult.HasConflict {
+			resp.Conflict = true
+			resp.ConflictDetail = append(resp.ConflictDetail, confResult.Records...)
+		}
+		lastState = st
 	}
-	if confResult.HasConflict {
-		resp.ConflictDetail = confResult.Records
-	}
+	resp.Block = bitmap.ToReport(lastState)
 	writeJSON(w, http.StatusAccepted, resp)
 }
 
