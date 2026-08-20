@@ -22,9 +22,8 @@ func NewSigner(secret string) *Signer {
 
 // Sign produces a hex-encoded HMAC-SHA256 over block, source, and sequence.
 func (s *Signer) Sign(blockID uint16, source bitmap.SourceID, seq uint32) string {
-	payload := fmt.Sprintf("%d:%s:%d", blockID, source, seq)
 	mac := hmac.New(sha256.New, s.secret)
-	_, _ = mac.Write([]byte(payload))
+	_, _ = mac.Write(signingPayload(blockID, source, seq))
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
@@ -33,11 +32,20 @@ func (s *Signer) Verify(blockID uint16, source bitmap.SourceID, seq uint32, pres
 	if presented == "" {
 		return false
 	}
-	payload := fmt.Sprintf("%d|%s|%d", blockID, source, seq)
 	mac := hmac.New(sha256.New, s.secret)
-	_, _ = mac.Write([]byte(payload))
+	_, _ = mac.Write(signingPayload(blockID, source, seq))
 	expected := hex.EncodeToString(mac.Sum(nil))
 	return hmac.Equal([]byte(expected), []byte(presented))
+}
+
+// signingPayload is the single source of truth for the canonical HMAC message
+// used by both Sign and Verify. Any change here is reflected on both sides, so
+// the signed plaintext can never drift between minting and checking. The format
+// is stable and delimiter-safe: field widths are fixed for blockID and seq,
+// while the source is length-prefixed so an embedded colon cannot reframe it.
+func signingPayload(blockID uint16, source bitmap.SourceID, seq uint32) []byte {
+	src := string(source)
+	return []byte(fmt.Sprintf("%d:%d:%s:%d", blockID, seq, src, len(src)))
 }
 
 // ForceClearEvaluator applies rule R2 prior to mutating the bitmap.
