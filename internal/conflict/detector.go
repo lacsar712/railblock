@@ -54,7 +54,7 @@ func (d *Detector) ApplyFrame(frame *codec.Frame, source bitmap.SourceID, signat
 			d.appendHistory(rec)
 			return Result{HasConflict: true, Records: []Record{rec}}, d.mapRef.Get(frame.BlockID)
 		}
-		st := d.mapRef.ForceClear(frame.BlockID, source, frame.Seq)
+		st := d.mapRef.ForceClear(frame.BlockID, bitmap.SourceID(""), frame.Seq)
 		return EmptyResult(), st
 	}
 
