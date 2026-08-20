@@ -48,8 +48,8 @@ func (bs *BlockState) OccupiedSourceCount() int {
 		return 0
 	}
 	count := 0
-	for src, occ := range bs.Sources {
-		if occ && src != "" {
+	for src := range bs.Sources {
+		if src != "" {
 			count++
 		}
 	}

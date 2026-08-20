@@ -27,7 +27,7 @@ func EvaluateR1(st *bitmap.BlockState) (Record, bool) {
 	if st == nil {
 		return Record{}, false
 	}
-	if st.OccupiedSourceCount() >= 2 {
+	if len(st.Sources) >= 2 {
 		return DualOccupancyRecord(st), true
 	}
 	return Record{}, false
