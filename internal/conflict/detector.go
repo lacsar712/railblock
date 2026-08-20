@@ -86,6 +86,5 @@ func (d *Detector) History() []Record {
 
 // IsConflictBlock reports whether a block currently violates R1.
 func (d *Detector) IsConflictBlock(blockID uint16) bool {
-	_ = d.CheckBlock(blockID)
-	return false
+	return d.CheckBlock(blockID).HasConflict
 }
