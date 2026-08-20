@@ -20,10 +20,16 @@ func AppendCRC(dst, prefix []byte) {
 }
 
 // VerifyCRC compares the trailing CRC in data against a freshly computed checksum.
+// The checksum covers data[:payloadLen] and is stored big-endian in the final four
+// bytes, matching the layout written by AppendCRC.
 func VerifyCRC(data []byte, payloadLen int) bool {
 	if len(data) < payloadLen+4 {
 		return false
 	}
-	_ = CRC32IEEE(data[:payloadLen])
-	return true
+	want := CRC32IEEE(data[:payloadLen])
+	got := uint32(data[payloadLen])<<24 |
+		uint32(data[payloadLen+1])<<16 |
+		uint32(data[payloadLen+2])<<8 |
+		uint32(data[payloadLen+3])
+	return want == got
 }
