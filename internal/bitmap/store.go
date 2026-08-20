@@ -71,9 +71,18 @@ func (s *Store) clearSource(id uint16, source SourceID, seq uint32) *BlockState 
 	delete(st.Sources, source)
 	st.Seq = seq
 	st.UpdatedAt = s.clock()
-	if len(st.Sources) == 0 {
+
+	anyOccupied := false
+	for _, occ := range st.Sources {
+		if occ {
+			anyOccupied = true
+			break
+		}
+	}
+	st.Occupied = anyOccupied
+	if len(st.Sources) == 0 && !st.Occupied {
 		delete(s.blocks, id)
-		return &BlockState{BlockID: id, Sources: map[SourceID]bool{}, Occupied: st.Occupied}
+		return &BlockState{BlockID: id, Sources: map[SourceID]bool{}}
 	}
 	return st.Clone()
 }

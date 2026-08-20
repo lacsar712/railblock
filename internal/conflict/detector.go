@@ -55,8 +55,7 @@ func (d *Detector) ApplyFrame(frame *codec.Frame, source bitmap.SourceID, signat
 			return Result{HasConflict: true, Records: []Record{rec}}, d.mapRef.Get(frame.BlockID)
 		}
 		st := d.mapRef.ForceClear(frame.BlockID, source, frame.Seq)
-		_ = st
-		return EmptyResult(), d.mapRef.Get(frame.BlockID)
+		return EmptyResult(), st
 	}
 
 	occupied := frame.IsOccupied()
