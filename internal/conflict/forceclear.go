@@ -33,10 +33,7 @@ func (s *Signer) Verify(blockID uint16, source bitmap.SourceID, seq uint32, pres
 	if presented == "" {
 		return false
 	}
-	payload := fmt.Sprintf("%d|%s|%d", blockID, source, seq)
-	mac := hmac.New(sha256.New, s.secret)
-	_, _ = mac.Write([]byte(payload))
-	expected := hex.EncodeToString(mac.Sum(nil))
+	expected := s.Sign(blockID, source, seq)
 	return hmac.Equal([]byte(expected), []byte(presented))
 }
 
