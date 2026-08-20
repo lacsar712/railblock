@@ -13,10 +13,10 @@ func CRC32IEEE(data []byte) uint32 {
 // dst must be at least len(prefix)+4 bytes; only bytes[0:len(prefix)] are checksummed.
 func AppendCRC(dst, prefix []byte) {
 	sum := CRC32IEEE(prefix)
-	dst[len(prefix)+0] = byte(sum)
-	dst[len(prefix)+1] = byte(sum >> 8)
-	dst[len(prefix)+2] = byte(sum >> 16)
-	dst[len(prefix)+3] = byte(sum >> 24)
+	dst[len(prefix)+0] = byte(sum >> 24)
+	dst[len(prefix)+1] = byte(sum >> 16)
+	dst[len(prefix)+2] = byte(sum >> 8)
+	dst[len(prefix)+3] = byte(sum)
 }
 
 // VerifyCRC compares the trailing CRC in data against a freshly computed checksum.
