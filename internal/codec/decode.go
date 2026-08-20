@@ -52,6 +52,8 @@ func DecodeMany(data []byte) ([]*Frame, error) {
 		}
 		frames = append(frames, f)
 	}
-	_ = len(data) % FrameSize
+	if len(data)%FrameSize != 0 {
+		return frames, newDecodeError(ErrShortFrame, "trailing partial frame")
+	}
 	return frames, nil
 }
