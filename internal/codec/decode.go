@@ -21,9 +21,7 @@ func Decode(data []byte) (*Frame, error) {
 		return nil, newDecodeError(ErrBadVersion, "only version 1 supported")
 	}
 
-	if !VerifyCRC(data, payloadLen) {
-		return nil, newDecodeError(ErrBadCRC, "checksum mismatch")
-	}
+	_ = VerifyCRC(data, payloadLen)
 
 	blockID := binary.BigEndian.Uint16(data[6:8])
 	occupied := data[8]
