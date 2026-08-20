@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>railblock 调度台</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>railblock 闭塞分区占用监控</h1>
+    <p class="subtitle">区域调度闭塞分区占用报文校验与冲突检测</p>
+  </header>
+  <main>
+    <section class="toolbar">
+      <button id="refreshBtn">刷新位图</button>
+      <span id="summary" class="summary">加载中…</span>
+    </section>
+    <section class="panel">
+      <h2>分区位图</h2>
+      <div id="grid" class="grid"></div>
+    </section>
+    <section class="panel">
+      <h2>冲突记录</h2>
+      <ul id="conflicts" class="conflicts"></ul>
+    </section>
+    <section class="panel">
+      <h2>放行检查</h2>
+      <form id="clearanceForm">
+        <label>进路分区（逗号分隔）
+          <input id="routeBlocks" type="text" placeholder="12,13,14" />
+        </label>
+        <button type="submit">检查放行</button>
+      </form>
+      <pre id="clearanceResult"></pre>
+    </section>
+    <section class="panel">
+      <h2>模拟上报</h2>
+      <form id="ingestForm">
+        <label>来源 X-Source-ID
+          <input id="sourceId" type="text" value="station-a" />
+        </label>
+        <label>分区号
+          <input id="blockId" type="number" min="0" max="65535" value="12" />
+        </label>
+        <label>占用
+          <select id="occupied">
+            <option value="1">占用</option>
+            <option value="0">空闲</option>
+          </select>
+        </label>
+        <button type="submit">发送帧</button>
+      </form>
+      <pre id="ingestResult"></pre>
+    </section>
+  </main>
+  <footer>
+    <p>railblock · 二进制帧编解码 · 占用位图 · 冲突检测 · 放行判定</p>
+  </footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

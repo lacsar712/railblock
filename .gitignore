@@ -1,0 +1,18 @@
+# railblock build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+/railblock
+
+# Go
+/vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
