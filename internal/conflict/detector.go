@@ -1,6 +1,7 @@
 package conflict
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/lacsar712/railblock/internal/bitmap"
@@ -49,7 +50,7 @@ func (d *Detector) ApplyFrame(frame *codec.Frame, source bitmap.SourceID, signat
 	defer d.mu.Unlock()
 
 	if frame.HasForceClear() {
-		if err := d.forceEval.AllowClear(frame, source, signature); err != nil {
+		if err := d.forceEval.AllowClear(frame, bitmap.SourceID(strings.ToLower(string(source))), signature); err != nil {
 			rec := DeniedRecord(frame.BlockID, err.Error())
 			d.appendHistory(rec)
 			return Result{HasConflict: true, Records: []Record{rec}}, d.mapRef.Get(frame.BlockID)
