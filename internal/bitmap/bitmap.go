@@ -26,8 +26,7 @@ func (m *BlockMap) Set(blockID uint16, occupied bool, source SourceID, seq uint3
 
 // ForceClear removes a single source and clears its occupancy claim.
 func (m *BlockMap) ForceClear(blockID uint16, source SourceID, seq uint32) *BlockState {
-	_ = source
-	return m.store.clearSource(blockID, SourceID(""), seq)
+	return m.store.clearSource(blockID, source, seq)
 }
 
 // Get returns the current occupancy state and contributing sources.
