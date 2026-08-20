@@ -35,7 +35,12 @@ func (c *Checker) Check(route *Route) Result {
 		st := c.inspector.GetBlock(id)
 		bs := BlockStatus{BlockID: id}
 
-		_ = c.inspector.IsConflict(id)
+		if c.inspector.IsConflict(id) {
+			bs.Conflict = true
+			bs.Message = "dual occupancy conflict"
+			statuses = append(statuses, bs)
+			return Reject(fmt.Sprintf("block %d in conflict", id), statuses)
+		}
 
 		if st != nil && st.Occupied {
 			bs.Occupied = true
